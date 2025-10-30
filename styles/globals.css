@@ -1,0 +1,71 @@
+/* Custom color variables */
+:root {
+    --bg-color: #77C4F8;
+    --text-color: #171717;
+    --primary-color: #053C61;
+    --secondary-color: #DE8755;
+}
+
+/* Global body styles */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Primary buttons / elements */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Secondary buttons / elements */
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Card styles */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Floating action button */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+}
+
+/* Skeleton loader */
+.skeleton {
+    background-color: #dcdcdc;
+    border-radius: 0.25rem;
+    min-height: 150px;
+    margin-bottom: 1rem;
+}
+
+.radius-selector select {
+    width: 6.5rem;
+    height: 3rem;
+    text-align: center;
+    border-radius: 3rem;
+    font-size: 1.25rem;
+    padding: 0;
+    padding-right: 1.5rem;
+}
