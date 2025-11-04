@@ -17,7 +17,7 @@ export default function Login() {
 
         setLoading(false);
         if (error) alert(error.message);
-        else router.push('/');
+        else router.push('/job-board');
     };
 
     return (

@@ -10,9 +10,13 @@
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: Arial, sans-serif;
+    font-family: "Lucida Console", sans-serif;
     margin: 0;
     padding: 0;
+}
+
+h1,h2,h3,h4,h5,h5 {
+    font-family: monospace, sans-serif;
 }
 
 /* Primary buttons / elements */
@@ -34,8 +38,8 @@ a {
 }
 
 a:hover {
-    color: var(--primary-color);
-    text-decoration: underline;
+    color: var(--secondary-color);
+    text-decoration: none;
 }
 
 /* Card styles */
@@ -68,4 +72,45 @@ a:hover {
     font-size: 1.25rem;
     padding: 0;
     padding-right: 1.5rem;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
+--------- INDEX PAGE STUFF ------------
+*/
+
+.section {
+    padding: 5rem 0;
+}
+.hero {
+    background: url('/images/bees-at-hive.png') center/cover no-repeat;
+    color: white;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+}
+.hero-overlay {
+    background-color: rgba(5, 60, 97, 0.6);
+    padding: 8rem 1rem;
+}
+.feature-img {
+    border-radius: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.testimonial {
+    background-color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+footer {
+    padding: 2rem 0;
 }

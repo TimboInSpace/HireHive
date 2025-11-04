@@ -8,66 +8,19 @@ import PostJobModal from './PostJobModal';
 import ProtectedRoute from './ProtectedRoute';
 
 export default function Layout({ children }) {
-    const router = useRouter();
-    const { user, authLoading } = useAuth();
-    const [profile, setProfile] = useState(null);
-
-    useEffect(() => {
-        if (!user) return;
-
-        const loadProfile = async () => {
-            let profileData = null;
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
-                if (error) throw error;
-                profileData = data;
-            } catch (err) {
-                console.error(err);
-            }
-
-            if (!profileData) {
-                const { data: inserted, error: insertError } = await supabase
-                    .from('profiles')
-                    .insert([{ id: user.id, username: user.email.split('@')[0] }])
-                    .select();
-                if (insertError) throw insertError;
-                profileData = inserted[0];
-            }
-
-            setProfile(profileData);
-
-        };
-
-        loadProfile();
-
-        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (!session?.user) {
-                setProfile(null);
-            }
-        });
-
-        return () => listener.subscription.unsubscribe();
-    }, [user, router]);
-
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        setProfile(null);
-    };
+    
+    // Get the user (the user ID) and the logout function from the AuthContext
+    const { user, authLoading, logout } = useAuth();
 
     return (
         <>
             <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
                 <div className="container-fluid">
-                    <Link href="/" className="navbar-brand fw-bold text-primary">
-                        HireHive
+                    <Link href="/job-board" className="navbar-brand fw-bold text-primary">
+                        🐝 HireHive
                     </Link>
-
                     <div className="d-flex align-items-center ms-auto">
+                        <span className="small info" style={{paddingRight:"1rem"}}>[{user?.role || "No role"}]</span>
                         {user ? (
                             <>
                                 <Link
@@ -77,7 +30,7 @@ export default function Layout({ children }) {
                                     <i className="bi bi-person-circle me-1"></i> Profile
                                 </Link>
                                 <button
-                                    onClick={handleLogout}
+                                    onClick={logout}
                                     className="btn btn-outline-danger d-flex align-items-center"
                                 >
                                     <i className="bi bi-box-arrow-right me-1"></i> Logout
@@ -101,7 +54,7 @@ export default function Layout({ children }) {
             
                 {children}
                 
-                
+                <ProtectedRoute allowedRoles={['employer','both']}>
                     <button
                         type="button"
                         className="btn btn-primary rounded-circle shadow-lg position-fixed"
@@ -119,8 +72,7 @@ export default function Layout({ children }) {
                     </button>
 
                     <PostJobModal />
-               
-
+               </ProtectedRoute>
             </main>
         </>
     );

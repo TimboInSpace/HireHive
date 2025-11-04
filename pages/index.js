@@ -1,124 +1,102 @@
 // pages/index.js
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import JobCard from '../components/JobCard';
-import PostJobModal from '../components/PostJobModal';
-import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthProvider';
+import React from 'react';
 
 export default function Home() {
-    const router = useRouter();
-    const { user, authLoading } = useAuth();
-    
-    const [jobs, setJobs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [pos, setPos] = useState(null);
-    const [radius, setRadius] = useState(500); // meters
-    const [page, setPage] = useState(0);
-
-/*
-    useEffect(() => {
-        const s = supabase.auth.getSession().then(({ data }) => {
-            setUser(data.session?.user || null);
-        });
-    }, []);
-    
-    useEffect(() => {
-        // Ensure user is logged in
-        const s = supabase.auth.getSession().then(({ data }) => {
-            if (!data.session || !data.session.user) router.push('/login');
-            else setUser(data.session?.user);
-        });
-    }, []);
-*/
-
-    // geolocation prompt after login. If denied, sign out immediately.
-    useEffect(() => {
-        if (!user) return;
-        if (!navigator.geolocation) {
-            alert('Geolocation required; logging out.');
-            supabase.auth.signOut();
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            (p) => {
-                setPos({ lat: p.coords.latitude, lon: p.coords.longitude });
-            },
-            (err) => {
-                alert('Due to the nature of this web app, location services are REQUIRED. Logging out!');
-                supabase.auth.signOut();
-            },
-            { enableHighAccuracy: true }
-        );
-    }, [user]);
-
-    // fetch jobs: basic radius filter using PostGIS ST_DWithin
-    async function fetchJobs(reset = false) {
-        if (!pos) return;
-        setLoading(true);
-        
-        const offset = reset ? 0 : page * 20;
-        
-        // We should inner-join on the location field
-        console.log(`fetching jobs...`);
-
-        
-        const { data, error } = await supabase.rpc('get_nearby_jobs', {
-            user_lon: pos.lon,
-            user_lat: pos.lat,
-            max_distance: radius // dynamic radius
-        });
-        
-        // NOTE: For spatial filtering you'd normally use .filter with RPC. For now, we fetch and filter client-side (simple).
-        if (error) {
-            console.error(error);
-            setLoading(false);
-            return;
-        }
-            
-        console.log(JSON.stringify(data, null, '  '));
-        setJobs(data);
-        setLoading(false);
-    }
-
-    useEffect(() => {
-        if (!pos) return;
-        fetchJobs(true);
-    }, [pos, radius]);
-
     return (
-        <div className="container py-4">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h2>Neighborhood Jobs</h2>
-                <div className="radius-selector d-flex flex-column justify-content-center align-items-center">
-                    <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="form-select d-inline-block">
-                        <option value={100}>100 m</option>
-                        <option value={500}>500 m</option>
-                        <option value={1000}>1 km</option>
-                        <option value={5000}>5 km</option>
-                        <option value={10000}>10 km</option>
-                        <option value={100000}>100 km</option>
-                        <option value={1000000}>1000 km</option>
-                    </select>
-                    <br/>
-                    <span className="small">{pos?.lat.toFixed(3)}° N, {pos?.lon.toFixed(3)}° E</span>
+        <div>
+
+            <section className="hero text-center">
+                <div className="hero-overlay">
+                    <div className="container">
+                        <h1 className="display-5 fw-bold mb-0">
+                            Connecting Neighbors
+                        </h1>
+                        <h1 className="display-3 mb-3 fw-light text-uppercase">
+                            One Job at a Time
+                        </h1>
+                        <p className="lead mb-4">
+                            HireHive helps people find local help — and helps workers find opportunities — with kindness, privacy, and community at heart.
+                        </p>
+                        <a href="/signup" className="btn btn-secondary btn-lg me-3">Join Now</a>
+                        <a href="/job-board" className="btn btn-light btn-lg">Browse Jobs</a>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div className="row row-cols-1 row-cols-md-3 g-3">
-                {loading && Array.from({ length: 6 }).map((_, i) => (
-                    <div className="col" key={i}>
-                        <JobCard isLoading />
-                    </div>
-                ))}
-                {!loading && jobs.map(job => (
-                    <div className="col" key={job.id}>
-                        <JobCard job={job} employer={{ username: '...' }} />
-                    </div>
-                ))}
-            </div>
+            <section className="section text-center">
+                <div className="container">
+                    <h2 className="fw-bold mb-4">Why HireHive?</h2>
+                    <p className="lead mb-5">
+                        A buzzing community that brings together people who need help with those who want to lend a hand — without ads, tracking, or corporate nonsense.
+                    </p>
 
+                    <div className="row g-4">
+                        <div className="col-md-4">
+                            <img src="/images/cooperation.png" className="img-fluid feature-img mb-3" alt="People working together" />
+                            <h4>Community First</h4>
+                            <p>We’re about people helping people — neighbors, friends, and local helpers you can trust.</p>
+                        </div>
+                        <div className="col-md-4">
+                            <img src="/images/payment.png" className="img-fluid feature-img mb-3" alt="Payment for work" />
+                            <h4>Fair & Simple</h4>
+                            <p>Get paid directly for your work. No fees, no middlemen, no surprises — just honest exchange.</p>
+                        </div>
+                        <div className="col-md-4">
+                            <img src="/images/community.png" className="img-fluid feature-img mb-3" alt="Community garden" />
+                            <h4>Open & Free</h4>
+                            <p>HireHive is free, open-source, and funded only by donations (coming soon!). Your privacy matters.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="section bg-light">
+                <div className="container text-center">
+                    <h2 className="fw-bold mb-5">What Our Users Say</h2>
+                    <div className="row g-4">
+                        <div className="col-md-4">
+                            <div className="testimonial">
+                                <p>"I found help clearing snow from my driveway the same day I posted! Simple and friendly."</p>
+                                <h6 className="mt-3">– Jamie, Homeowner</h6>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div className="testimonial">
+                                <p>"HireHive helped me pick up extra work around my neighborhood. Love that it's community-based!"</p>
+                                <h6 className="mt-3">– Alex, Worker</h6>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div className="testimonial">
+                                <p>"Feels like the internet used to — people helping each other. No ads, no tracking."</p>
+                                <h6 className="mt-3">– Priya, Volunteer</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="section text-center">
+                <div className="container">
+                    <img src="/images/bees-on-flowers.png"
+                         className="img-fluid mb-4"
+                         style={{ maxWidth: '300px' }}
+                         alt="Bees working together" />
+                    <h2 className="fw-bold mb-3">Ready to Start Buzzing?</h2>
+                    <p className="lead mb-4">Sign up today and join your local hive of helpers!</p>
+                    <a href="/signup" className="btn btn-secondary btn-lg me-3">Get Started</a>
+                    <a href="/job-board" className="btn btn-outline-dark btn-lg">See Jobs</a>
+                </div>
+            </section>
+
+            <footer className="footer text-center text-white">
+                <div className="container">
+                    <p className="footer-text mb-1">🐝 HireHive — Community help made simple.</p>
+                    <p className="footer-text mb-0 small">Free, open source, and privacy-friendly.</p>
+                </div>
+            </footer>
         </div>
     );
 }
 
+Home.useLayout = false;

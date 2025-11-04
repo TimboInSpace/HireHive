@@ -2,7 +2,16 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['cdn.jsdelivr.net'], // if you later use images from CDNs
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.jsdelivr.net",
+        pathname: "/**",
+      },
+    ],
+  },
+  turbopack: {
+    root: "/home/tim/Documents/Hobby/HireHive"
   },
   async headers() {
     return [

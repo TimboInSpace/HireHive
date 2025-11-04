@@ -14,14 +14,6 @@ export default function JobDetail() {
     const [job, setJob] = useState(null);
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(false);
-    
-    /*
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            setProfile(data.session?.user);
-        });
-    }, []);
-    */
 
     useEffect(() => {
         if (!id) return;
@@ -83,7 +75,7 @@ export default function JobDetail() {
                 <p><strong>Compensation:</strong> {job.compensation}</p>
                 <p><strong>Payment:</strong> {job.payment_methods}</p>
                 <p><strong>Tools:</strong> {job.tools_provided}</p>
-
+                <ProtectedRoute allowedRoles={['worker','both']}>
                 {job.claimed_by ? (
                     <>
                         <p><strong>Claimed by:</strong> {job.claimed_by}</p>
@@ -95,6 +87,7 @@ export default function JobDetail() {
                 ) : (
                     <button className="btn btn-primary" onClick={claim}>Claim job</button>
                 )}
+                </ProtectedRoute>
             </div>
         </ProtectedRoute>
     );
