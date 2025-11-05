@@ -20,12 +20,13 @@ export function AuthProvider({ children }) {
     // Initialize session
     useEffect(() => {
         const init = async () => {
+
             const { data } = await supabase.auth.getSession();
             const sessionUser = data?.session?.user;
 
             if (!sessionUser) {
                 setAuthLoading(false);
-                router.replace('/login');
+                //router.replace('/login');
                 return;
             }
 

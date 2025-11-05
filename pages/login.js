@@ -1,4 +1,5 @@
 // pages/login.js
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
@@ -49,7 +50,7 @@ export default function Login() {
                 </button>
             </form>
             <p className="text-center mt-3">
-                Don’t have an account? <a href="/signup">Sign Up</a>
+                Don’t have an account? <Link href="/signup">Sign Up</Link>
             </p>
         </div>
     );
