@@ -1,4 +1,5 @@
 // pages/signup.js
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
@@ -70,7 +71,7 @@ export default function Signup() {
                 </button>
             </form>
             <p className="text-center mt-3">
-                Already have an account? <a href="/login">Login</a>
+                Already have an account? <Link href="/login">Login</Link>
             </p>
         </div>
     );

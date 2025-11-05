@@ -1,4 +1,5 @@
 // pages/index.js
+import Link from 'next/link';
 import React from 'react';
 
 export default function Home() {
@@ -17,8 +18,8 @@ export default function Home() {
                         <p className="lead mb-4">
                             HireHive helps people find local help — and helps workers find opportunities — with kindness, privacy, and community at heart.
                         </p>
-                        <a href="/signup" className="btn btn-secondary btn-lg me-3">Join Now</a>
-                        <a href="/job-board" className="btn btn-light btn-lg">Browse Jobs</a>
+                        <Link href="/signup" className="btn btn-secondary btn-lg me-3">Join Now</Link>
+                        <Link href="/job-board" className="btn btn-light btn-lg">Browse Jobs</Link>
                     </div>
                 </div>
             </section>

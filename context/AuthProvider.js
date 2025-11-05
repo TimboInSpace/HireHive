@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
 
             if (!sessionUser) {
                 setAuthLoading(false);
-                //router.replace('/login');
+                router.replace('/login');
                 return;
             }
 
@@ -66,12 +66,18 @@ export function AuthProvider({ children }) {
     
     useEffect(() => {
         const onPageLoad = async () => {
+        
             // Wait until auth settles
             if (authLoading) return;
+            
             // We don't care about auth on public routes
             if (publicRoutes.includes(router.pathname)) return;
+            
+            // If somehow this ran and user is null, return
+            // ..?
+            
             // On protected routes, we must have a valid role
-            if (true || !appRoles.includes(user?.role)) {
+            if (user?.id && !appRoles.includes(user?.role)) {
                 // Look up the role
                 const { data: profile, error } = await supabase
                     .from('profiles')
@@ -84,6 +90,7 @@ export function AuthProvider({ children }) {
                     setUser({ ...user, role: profile?.role });
                 }
             }
+            
         };
         onPageLoad();
     }, [authLoading, router]);
