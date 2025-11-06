@@ -23,36 +23,43 @@ export default function Login() {
 
     return (
         <div className="container py-5" style={{ maxWidth: '400px' }}>
-            <h2 className="text-center mb-4">Login</h2>
-            <form onSubmit={handleLogin}>
-                <div className="mb-3">
-                    <label className="form-label">Email</label>
-                    <input
-                        type="email"
-                        className="form-control"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <div className="mb-3">
-                    <label className="form-label">Password</label>
-                    <input
-                        type="password"
-                        className="form-control"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                    {loading ? 'Logging in…' : 'Login'}
-                </button>
-            </form>
-            <p className="text-center mt-3">
-                Don’t have an account? <Link href="/signup">Sign Up</Link>
-            </p>
+            <div className="auth-form vh-100 d-flex flex-column align-items-center justify-content-center">
+                <Link href="/">
+                    <img className="w-100 mb-4" src="/images/logo/logo cropped transparent bg.png" altText="Logo for login page"/>
+                </Link>
+                {/* <h2 className="text-center mb-4">Login</h2> */}
+                <form onSubmit={handleLogin}>
+                    <div className="mb-3">
+                        <label className="form-label">Email</label>
+                        <input
+                            type="email"
+                            className="form-control"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Password</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                        {loading ? 'Logging in…' : 'Login'}
+                    </button>
+                </form>
+                <p className="text-center mt-3">
+                    Don’t have an account? <Link href="/signup">Sign Up</Link>
+                </p>
+            </div>
         </div>
     );
 }
+
+Login.useLayout = false;
 

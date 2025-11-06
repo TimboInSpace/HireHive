@@ -113,7 +113,7 @@ export default function EmployerProfile({ user, authLoading }) {
                     handleLocationBlur={handleLocationBlur}
                 />
 
-                <button type="submit" className="btn btn-secondary mt-3">
+                <button type="submit" className="btn btn-secondary text-dark mt-3">
                     Save Profile
                 </button>
             </form>

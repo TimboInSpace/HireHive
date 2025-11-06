@@ -271,7 +271,7 @@ export default function PostJobModal() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn btn-primary"
+                                    className="btn btn-primary text-dark"
                                     disabled={loading}
                                 >
                                     {loading ? 'Posting...' : 'Post Job'}

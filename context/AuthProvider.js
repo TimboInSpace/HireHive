@@ -14,7 +14,10 @@ export function AuthProvider({ children }) {
     const appRoles = ['employer','worker','both'];
 
     const logout = async () => {
+        setAuthLoading(true);
         await supabase.auth.signOut();
+        router.replace('/login');
+        setAuthLoading(false);
     };
 
     // Initialize session
@@ -26,7 +29,8 @@ export function AuthProvider({ children }) {
 
             if (!sessionUser) {
                 setAuthLoading(false);
-                router.replace('/login');
+                //console.log(`redirecting to login because the user could not be found!`);
+                //router.replace('/login');
                 return;
             }
 
@@ -55,13 +59,15 @@ export function AuthProvider({ children }) {
         return () => listener.subscription.unsubscribe();
     }, []);
     
-    
+    /*
     useEffect(() => {
         if (authLoading) return;
         if (!user?.role) {
+            console.log(`redirecting to login because there is no user role!`);
             router.replace('/login');
         }
     }, [authLoading, user]);
+    */
     
     
     useEffect(() => {
@@ -72,9 +78,13 @@ export function AuthProvider({ children }) {
             
             // We don't care about auth on public routes
             if (publicRoutes.includes(router.pathname)) return;
+            console.log(`router.pathname was ${router.pathname}`);
             
-            // If somehow this ran and user is null, return
-            // ..?
+            // This is a protected route. If the user is null, return to login.
+            if (!user || !user?.id) {
+                console.log(`redirecting because there is no user id, and we're on a protected route`);
+                router.replace('/login');
+            }
             
             // On protected routes, we must have a valid role
             if (user?.id && !appRoles.includes(user?.role)) {

@@ -14,7 +14,7 @@ export default function JobBoard() {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [pos, setPos] = useState(null);
-    const [radius, setRadius] = useState(500); // meters
+    const [radius, setRadius] = useState(1000); // meters
     const [page, setPage] = useState(0);
     
     // geolocation prompt after login. If denied, sign out immediately.

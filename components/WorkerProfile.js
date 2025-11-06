@@ -20,9 +20,9 @@ export default function WorkerProfile({ user, authLoading }) {
         (async () => {
             try {
                 const prof = await getProfile(user.id);
-                setProfile(prof);
-                setTools(prof.tools || '');
-                setSpecialties(prof.specialties || '');
+                setProfile(prof || null);
+                setTools(prof?.tools || '');
+                setSpecialties(prof?.specialties || '');
 
                 const { data: loc, error } = await supabase
                     .from('employer_locations')
@@ -135,7 +135,7 @@ export default function WorkerProfile({ user, authLoading }) {
 
                 <button
                     type="submit"
-                    className="btn btn-secondary mt-3"
+                    className="btn btn-secondary text-dark mt-3"
                     disabled={saving}
                 >
                     {saving ? 'Saving...' : 'Save Profile'}

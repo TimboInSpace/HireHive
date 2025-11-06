@@ -18,8 +18,9 @@ export default function Home() {
                         <p className="lead mb-4">
                             HireHive helps people find local help — and helps workers find opportunities — with kindness, privacy, and community at heart.
                         </p>
-                        <Link href="/signup" className="btn btn-secondary btn-lg me-3">Join Now</Link>
-                        <Link href="/job-board" className="btn btn-light btn-lg">Browse Jobs</Link>
+                        <Link href="/signup" className="btn btn-secondary text-dark btn-lg me-3">Join Now</Link>
+                        <br/>
+                        <Link href="/job-board" className="">Have an account? Browse Jobs</Link>
                     </div>
                 </div>
             </section>
@@ -85,7 +86,7 @@ export default function Home() {
                          alt="Bees working together" />
                     <h2 className="fw-bold mb-3">Ready to Start Buzzing?</h2>
                     <p className="lead mb-4">Sign up today and join your local hive of helpers!</p>
-                    <a href="/signup" className="btn btn-secondary btn-lg me-3">Get Started</a>
+                    <a href="/signup" className="btn btn-secondary text-dark btn-lg me-3">Get Started</a>
                     <a href="/job-board" className="btn btn-outline-dark btn-lg">See Jobs</a>
                 </div>
             </section>

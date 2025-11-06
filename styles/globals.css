@@ -1,9 +1,9 @@
-/* Custom color variables */
+/* palette */
 :root {
-    --bg-color: #77C4F8;
+    --bg-color: #7cd8ff; /* formerly: #77C4F8; */
     --text-color: #171717;
     --primary-color: #053C61;
-    --secondary-color: #DE8755;
+    --secondary-color: #ddcb54; /* formerly: #DE8755; */
 }
 
 /* Global body styles */
@@ -74,19 +74,22 @@ a:hover {
     padding-right: 1.5rem;
 }
 
+.navbar-logo {
+    height: 4rem;
+}
 
+.auth-form {
+    width: 80%:
+    max-width: 400px;
+}
 
-
-
-
-
-
-
-
+.auth-form form {
+    width: 100%;
+}
 
 
 /* 
---------- INDEX PAGE STUFF ------------
+--------- INDEX PAGE ------------
 */
 
 .section {

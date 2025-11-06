@@ -8,6 +8,13 @@ import Spinner from '../components/Spinner';
 export default function Profile() {
     const { user, authLoading } = useAuth();
     const [ready, setReady] = useState(false);
+    
+    function setRole(s) {
+        const validRoles = ['worker', 'employer', 'both']
+        if (user && validRoles.includes(s)) {
+            user.role = s;
+        }
+    }
 
     useEffect(() => {
         if (authLoading) return;
@@ -48,14 +55,14 @@ export default function Profile() {
                 <div className="d-flex justify-content-center gap-4 mt-4">
                     <button
                         className="btn btn-primary btn-lg d-flex flex-column align-items-center"
-                        onClick={() => alert('Set role=worker and reload (not implemented yet)')}
+                        onClick={setRole('worker')}
                     >
                         <i className="bi bi-person-workspace" style={{ fontSize: '2rem' }}></i>
                         Worker
                     </button>
                     <button
                         className="btn btn-secondary btn-lg d-flex flex-column align-items-center"
-                        onClick={() => alert('Set role=employer and reload (not implemented yet)')}
+                        onClick={setRole('employer')}
                     >
                         <i className="bi bi-building" style={{ fontSize: '2rem' }}></i>
                         Employer
