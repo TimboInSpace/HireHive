@@ -22,10 +22,12 @@
   "homepage": "https://github.com/TimboInSpace/HireHive#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",
+    "leaflet": "^1.9.4",
     "next": "^16.0.0",
     "nodemailer": "^7.0.10",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0",
     "reaxt": "^0.0.0",
     "uuid": "^13.0.0"
   },

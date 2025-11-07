@@ -25,7 +25,7 @@ export default function Login() {
         <div className="container py-5" style={{ maxWidth: '400px' }}>
             <div className="auth-form vh-100 d-flex flex-column align-items-center justify-content-center">
                 <Link href="/">
-                    <img className="w-100 mb-4" src="/images/logo/logo cropped transparent bg.png" altText="Logo for login page"/>
+                    <img className="w-100 mb-4" src="/images/logo/logo cropped transparent bg.png" alttext="Logo for login page"/>
                 </Link>
                 {/* <h2 className="text-center mb-4">Login</h2> */}
                 <form onSubmit={handleLogin}>

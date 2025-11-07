@@ -36,7 +36,7 @@ export default function Signup() {
         <div className="container py-5" style={{ maxWidth: '400px' }}>
             <div className="auth-form vh-100 d-flex flex-column align-items-center justify-content-center">
                 <Link href="/">
-                <img className="w-100 mb-4" src="/images/logo/logo cropped transparent bg.png" altText="Logo for signup page"/>
+                <img className="w-100 mb-4" src="/images/logo/logo cropped transparent bg.png" alttext="Logo for signup page"/>
                 </Link>
                 {/* <h2 className="text-center mb-4">Sign Up</h2> */}
                 <form onSubmit={handleSignup}>

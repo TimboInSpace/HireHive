@@ -89,6 +89,26 @@ a:hover {
 
 
 /* 
+--------- MAP STUFF  ------------
+*/
+.map-icon-container {
+    border-radius: 100%;
+    background-color: #053C61;
+    padding: 0.25rem;
+    width: fit-content;
+    box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.2);
+}
+.map-icon-container.unclaimed {
+    background-color: var(--secondary-color);
+    z-index: 11;
+}
+.map-icon-container.claimed {
+    background-color: var(--bg-color);
+    z-index: 10;
+}
+
+
+/* 
 --------- INDEX PAGE ------------
 */
 

@@ -193,6 +193,79 @@ I didn't want to do this kind of thing, since I like to allow people to freely u
 
 
 
+fuck, let's try this instead (forgot the job lat/lon in the results!)
+
+```postgresql
+create or replace function get_nearby_jobs(
+    user_lon double precision,
+    user_lat double precision,
+    max_distance double precision
+)
+returns table (
+    distance_m double precision,
+    lon double precision,
+    lat double precision,
+    -- include all job columns automatically
+    job_id uuid,
+    employer_id uuid,
+    title text,
+    description text,
+    location uuid,
+    compensation numeric,
+    payment_method text,
+    approx_duration text,
+    due_by timestamp with time zone,
+    work_within tstzrange,
+    tools text,
+    claimed_by uuid,
+    completed_by_worker boolean,
+    completed_by_employer boolean,
+    created_at timestamp with time zone,
+    claimed_at timestamp with time zone
+)
+language sql as $$
+  select
+    ST_Distance(
+      el.geo,
+      ST_SetSRID(ST_MakePoint(user_lon, user_lat), 4326)::geography
+    ) as distance_m,
+    ST_X(el.geo::geometry) AS lon,
+    ST_Y(el.geo::geometry) AS lat,
+    j.id as job_id,
+    j.employer_id,
+    j.title,
+    j.description,
+    j.location,
+    j.compensation,
+    j.payment_method,
+    j.approx_duration,
+    j.due_by,
+    j.work_within,
+    j.tools,
+    j.claimed_by,
+    j.completed_by_worker,
+    j.completed_by_employer,
+    j.created_at,
+    j.claimed_at
+  from jobs j
+  join employer_locations el
+    on j.location = el.id
+  where ST_DWithin(
+      el.geo,
+      ST_SetSRID(ST_MakePoint(user_lon, user_lat), 4326)::geography,
+      LEAST(max_distance, 500000)
+  )
+  order by distance_m;
+$$;
+
+```
+
+
+
+
+
+
+
 ## TO-DO
 
 - [ ] index page should be more like a homepage
