@@ -55,51 +55,81 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 
 -- Now do the rest of the schema
-CREATE TABLE IF NOT EXISTS employer_locations (
+CREATE TABLE IF NOT EXISTS locations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   owner uuid,
   address text,
   geo USER-DEFINED,
   created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT employer_locations_pkey PRIMARY KEY (id),
-  CONSTRAINT employer_locations_owner_fkey FOREIGN KEY (owner) REFERENCES public.profiles(id)
+  CONSTRAINT locations_pkey PRIMARY KEY (id),
+  CONSTRAINT locations_owner_fkey FOREIGN KEY (owner) REFERENCES public.profiles(id)
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  employer_id uuid,
-  title text NOT NULL,
+  id uuid primary key default gen_random_uuid(),
+  employer_id uuid references profiles(id) on delete cascade,
+  created_at timestamptz default now(),
+  title text not null,
   description text,
-  location uuid,
-  compensation numeric,
+  location uuid references employer_locations(id), -- FK to employer_locations
+  compensation_amount numeric,
+  compensation_unit text,
   payment_method text,
   approx_duration text,
-  due_by timestamp with time zone,
+  due_by timestamptz,
   work_within tstzrange,
   tools text,
-  claimed_by uuid,
-  completed_by_worker boolean DEFAULT false,
-  completed_by_employer boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  claimed_at timestamp with time zone,
+  claimed_by uuid references profiles(id),
+  claimed_at timestamptz,
+  completed_by uuid references profiles(id),
+  completed_at timestamptz,
+  confirmed_by uuid references profiles(id),
+  confirmed_at timestamptz,
+  rating_by_employer uuid references ratings(id),
+  rating_by_worker uuid references ratings(id),
   CONSTRAINT jobs_pkey PRIMARY KEY (id),
   CONSTRAINT jobs_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.profiles(id),
-  CONSTRAINT jobs_location_fkey FOREIGN KEY (location) REFERENCES public.employer_locations(id),
-  CONSTRAINT jobs_claimed_by_fkey FOREIGN KEY (claimed_by) REFERENCES public.profiles(id)
+  CONSTRAINT jobs_location_fkey FOREIGN KEY (location) REFERENCES public.locations(id)
 );
 
+CREATE TABLE IF NOT EXISTS tags (
+    label text PRIMARY KEY,
+    description text,
+    icon text, -- bootstrap icon class name (without the "bi-" prefix below for clarity)
+    applies_to text CHECK (applies_to IN ('employer', 'worker', 'either'))
+);
+
+INSERT INTO tags (label, description, icon, applies_to)
+VALUES
+    ('Fast', 'Works really fast and meets deadlines efficiently', 'lightning', 'worker'),
+    ('Friendly', 'A pleasant person to help or hire', 'emoji-smile', 'either'),
+    ('Reliable', 'Shows up on time and follows through consistently', 'check-circle', 'worker'),
+    ('Organized', 'Keeps tasks and communications well-structured', 'calendar-check', 'either'),
+    ('Great Communication', 'Communicates clearly and promptly', 'chat-dots', 'either'),
+    ('High Quality', 'Delivered top-quality work or materials', 'star-fill', 'worker'),
+    ('Professional', 'Maintains a respectful and professional attitude', 'briefcase', 'either'),
+    ('Supportive', 'Encouraging and collaborative to work with', 'hand-thumbs-up', 'employer'),
+    ('Good Instructions', 'Gave clear and detailed job expectations', 'info-circle', 'employer'),
+    ('Punctual Payment', 'Paid promptly and without issue', 'cash-stack', 'employer'),
+    ('Patient', 'Takes time to explain or accommodate changes', 'hourglass-split', 'either'),
+    ('Team Player', 'Works well with others and contributes positively', 'people-fill', 'worker'),
+    ('Detail Oriented', 'Pays close attention to details and quality', 'zoom-in', 'worker');
+
 CREATE TABLE IF NOT EXISTS ratings (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  job_id uuid,
-  worker_id uuid,
-  employer_id uuid,
-  job_rating integer CHECK (job_rating >= 1 AND job_rating <= 5),
-  worker_rating integer CHECK (worker_rating >= 1 AND worker_rating <= 5),
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT ratings_pkey PRIMARY KEY (id),
-  CONSTRAINT ratings_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id),
-  CONSTRAINT ratings_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES public.profiles(id),
-  CONSTRAINT ratings_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.profiles(id)
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  submitted_by uuid NOT NULL,
+  job_id uuid REFERENCES public.jobs(id),
+  worker_id uuid REFERENCES public.profiles(id),
+  employer_id uuid REFERENCES public.profiles(id),
+  rating integer CHECK (rating >= 1 AND rating <= 10),
+  created_at timestamptz DEFAULT now()
+);
+
+-- Linking table: a rating can have multiple tags
+CREATE TABLE IF NOT EXISTS rating_tags (
+    rating_id uuid NOT NULL REFERENCES ratings(id) ON DELETE CASCADE,
+    tag_label text NOT NULL REFERENCES tags(label) ON DELETE CASCADE,
+    PRIMARY KEY (rating_id, tag_label)
 );
 
 CREATE TABLE IF NOT EXISTS public.spatial_ref_sys (
@@ -114,7 +144,7 @@ CREATE TABLE IF NOT EXISTS public.spatial_ref_sys (
 -- Lastly, add the FK constraint back in
 alter table profiles
 add constraint fk_primary_location
-foreign key (primary_location) references employer_locations(id);
+foreign key (primary_location) references locations(id);
 ```
 
 To perform a server-side calculation of distance between locations, we can define a **custom function** in supabase. We're expecting the user's location as lat/long (that's how we get it from the browser location services) and need to compare to locations stored in well known binary format (WKBF).
@@ -127,7 +157,8 @@ To perform a server-side calculation of distance between locations, we can defin
 
 The lat/lon that we get from the browser is actually really, really rough. Mine only gets a location 350km from here... As a result, we set a very wide limit on how "wide" the range can be (500km):
 
-```
+```postgresql
+-- DROP FUNCTION get_nearby_jobs(double precision,double precision,double precision);
 create or replace function get_nearby_jobs(
     user_lon double precision,
     user_lat double precision,
@@ -135,23 +166,30 @@ create or replace function get_nearby_jobs(
 )
 returns table (
     distance_m double precision,
+    lon double precision,
+    lat double precision,
     -- include all job columns automatically
     job_id uuid,
     employer_id uuid,
+    created_at timestamptz,
     title text,
     description text,
     location uuid,
-    compensation numeric,
+    compensation_amount numeric,
+    compensation_unit text,
     payment_method text,
     approx_duration text,
-    due_by timestamp with time zone,
+    due_by timestamptz,
     work_within tstzrange,
     tools text,
     claimed_by uuid,
-    completed_by_worker boolean,
-    completed_by_employer boolean,
-    created_at timestamp with time zone,
-    claimed_at timestamp with time zone
+    claimed_at timestamptz,
+    completed_by uuid,
+    completed_at timestamptz,
+    confirmed_by uuid,
+    confirmed_at timestamptz,
+    rating_by_employer uuid,
+    rating_by_worker uuid
 )
 language sql as $$
   select
@@ -159,24 +197,31 @@ language sql as $$
       el.geo,
       ST_SetSRID(ST_MakePoint(user_lon, user_lat), 4326)::geography
     ) as distance_m,
+    ST_X(el.geo::geometry) AS lon,
+    ST_Y(el.geo::geometry) AS lat,
     j.id as job_id,
     j.employer_id,
+    j.created_at,
     j.title,
     j.description,
     j.location,
-    j.compensation,
+    j.compensation_amount,
+    j.compensation_unit,
     j.payment_method,
     j.approx_duration,
     j.due_by,
     j.work_within,
     j.tools,
     j.claimed_by,
-    j.completed_by_worker,
-    j.completed_by_employer,
-    j.created_at,
-    j.claimed_at
+    j.claimed_at,
+    j.completed_by,
+    j.completed_at,
+    j.confirmed_by,
+    j.confirmed_at,
+    j.rating_by_employer,
+    j.rating_by_worker
   from jobs j
-  join employer_locations el
+  join locations el
     on j.location = el.id
   where ST_DWithin(
       el.geo,
@@ -187,7 +232,7 @@ language sql as $$
 $$;
 ```
 
-I didn't want to do this kind of thing, since I like to allow people to freely use VPNs. However this is one of those apps that connects cyberspace to meetspace, so we need to depend on an accurate location...
+
 
 
 

@@ -20,7 +20,7 @@ export default function Home() {
                         </p>
                         <Link href="/signup" className="btn btn-secondary text-dark btn-lg me-3">Join Now</Link>
                         <br/>
-                        <Link href="/job-board" className="">Have an account? Browse Jobs</Link>
+                        <Link href="/job-board" className="">Aleady joined? Proceed to Sign-in</Link>
                     </div>
                 </div>
             </section>
@@ -80,7 +80,7 @@ export default function Home() {
 
             <section className="section text-center">
                 <div className="container">
-                    <img src="/images/bees-on-flowers.png"
+                    <img src="/images/bees-at-hive.png"
                          className="img-fluid mb-4"
                          style={{ maxWidth: '300px' }}
                          alt="Bees working together" />

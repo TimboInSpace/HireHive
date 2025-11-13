@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import '../node_modules/leaflet/dist/leaflet.css';
 import Layout from '../components/Layout';
 import { AuthProvider } from '../context/AuthProvider';
 

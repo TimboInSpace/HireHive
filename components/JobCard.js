@@ -80,7 +80,7 @@ export default function JobCard({ job, employer_id, isLoading }) {
     return (
         <div className="card h-100 overflow-hidden position-relative">
             {claimed && (
-                <div
+                <Link
                     className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
                     style={{
                         background: 'rgba(0,0,0,0.45)',
@@ -88,9 +88,10 @@ export default function JobCard({ job, employer_id, isLoading }) {
                         color: 'white',
                         transform: 'rotate(-30deg) scale(2.25)',
                     }}
+                    href={`/job/${job.job_id}`}
                 >
                     CLAIMED
-                </div>
+                </Link>
             )}
             <div className="card-body">
                 <h5 className="card-title">{job.title}</h5>

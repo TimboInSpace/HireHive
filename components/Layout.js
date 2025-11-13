@@ -17,7 +17,7 @@ export default function Layout({ children }) {
             <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
                 <div className="container-fluid">
                     <Link href="/job-board" className="navbar-brand fw-bold text-primary">
-                        <img className="navbar-logo" src="/images/logo/logo cropped transparent bg.png" altText="Logo of bees around a beehive"/>
+                        <img className="navbar-logo" src="/images/logo/logo cropped transparent bg.png" alttext="Logo of bees around a beehive"/>
                     </Link>
                     <div className="d-flex align-items-center ms-auto">
                         <span className="small info" style={{paddingRight:"1rem"}}>[{user?.role || "No role"}]</span>

@@ -19,6 +19,42 @@ export function AuthProvider({ children }) {
         router.replace('/login');
         setAuthLoading(false);
     };
+    
+    
+    // TO-DO: make sure this gets called on every login? 
+    // ?!? Maybe it should go in the supabase.auth.onAuthStateChange handler ?!?
+    // 
+    const lookupProfile = async (userId) => {
+            let userProfile;
+            // Attempt to look up the profile
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', userId)
+                .single();
+
+            if (error) console.error(error);
+            else if (profile) {
+                userProfile = profile;
+            }
+            else {
+                // Insert the profile
+                const { data: insertedProfile, error: insertError} = await supabase
+                    .from('profiles')
+                    .insert([{ id: sessionUser.id, username: sessionUser.email.split('@')[0] }])
+                    .select('*');
+                    
+                if (insertError) { 
+                    console.error(error); 
+                    return null;
+                } else if (!insertedProfile) {
+                    console.error(`New profile was created without error, but was not returned by the query?`);
+                    return null;
+                }
+                userProfile = insertedProfile;
+            }
+            return userProfile;
+    }
 
     // Initialize session
     useEffect(() => {
@@ -29,31 +65,25 @@ export function AuthProvider({ children }) {
 
             if (!sessionUser) {
                 setAuthLoading(false);
-                //console.log(`redirecting to login because the user could not be found!`);
-                //router.replace('/login');
                 return;
             }
-
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', sessionUser.id)
-                .single();
-
-            if (error) console.error(error);
-            else if (!profile) {
-                await supabase
-                    .from('profiles')
-                    .insert([{ id: sessionUser.id, username: sessionUser.email.split('@')[0] }]);
-            }
-            setUser({ ...sessionUser, role: profile?.role });
+            const prof = await lookupProfile(sessionUser.id);
+            setUser({ ...sessionUser, role: prof?.role });
             setAuthLoading(false);
         };
 
         init();
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user || null);
+            if (session?.user) {
+                setUser(session?.user || null);
+                (async () => {
+                    const prof = await lookupProfile(session.user.id);
+                    setUser({ ...session.user, role: prof?.role || null });
+                })();
+            } else {
+                setUser(null);
+            }
         });
 
         return () => listener.subscription.unsubscribe();
