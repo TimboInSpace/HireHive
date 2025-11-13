@@ -116,7 +116,8 @@ a:hover {
     padding: 5rem 0;
 }
 .hero {
-    background: url('/images/bees-at-hive.png') center/cover no-repeat;
+    
+    /* background: url('/images/bees-at-hive.png') center/cover no-repeat; */
     color: white;
     text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
 }

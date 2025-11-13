@@ -1,6 +1,7 @@
 // components/JobMap.js
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
 // SSR-safe dynamic imports
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
@@ -28,7 +29,7 @@ export default function JobMap({ pos, jobs = [], radius = 1000 }) {
                     html: svgMarkup,
                     className: '', // no default Leaflet styles
                     iconSize: [2*imgSize, 2*imgSize],
-                    iconAnchor: [imgSize, 2*imgSize],
+                    iconAnchor: [imgSize, imgSize],
                     popupAnchor: [0, -2*imgSize + 4],
                 });
 
@@ -97,6 +98,7 @@ export default function JobMap({ pos, jobs = [], radius = 1000 }) {
                                     <strong>{job.title}</strong>
                                     <br />
                                     {job.distance_m && `${job.distance_m.toFixed(0)} m away`}
+                                    <br/><Link href={"/job/"+job.job_id}>View</Link>
                                 </Popup>
                             </Marker>
                         ) : null
