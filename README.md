@@ -55,14 +55,14 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 
 -- Now do the rest of the schema
-CREATE TABLE IF NOT EXISTS employer_locations (
+CREATE TABLE IF NOT EXISTS locations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   owner uuid,
   address text,
   geo USER-DEFINED,
   created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT employer_locations_pkey PRIMARY KEY (id),
-  CONSTRAINT employer_locations_owner_fkey FOREIGN KEY (owner) REFERENCES public.profiles(id)
+  CONSTRAINT locations_pkey PRIMARY KEY (id),
+  CONSTRAINT locations_owner_fkey FOREIGN KEY (owner) REFERENCES public.profiles(id)
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   rating_by_worker uuid references ratings(id),
   CONSTRAINT jobs_pkey PRIMARY KEY (id),
   CONSTRAINT jobs_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.profiles(id),
-  CONSTRAINT jobs_location_fkey FOREIGN KEY (location) REFERENCES public.employer_locations(id)
+  CONSTRAINT jobs_location_fkey FOREIGN KEY (location) REFERENCES public.locations(id)
 );
 
 CREATE TABLE IF NOT EXISTS tags (
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS public.spatial_ref_sys (
 -- Lastly, add the FK constraint back in
 alter table profiles
 add constraint fk_primary_location
-foreign key (primary_location) references employer_locations(id);
+foreign key (primary_location) references locations(id);
 ```
 
 To perform a server-side calculation of distance between locations, we can define a **custom function** in supabase. We're expecting the user's location as lat/long (that's how we get it from the browser location services) and need to compare to locations stored in well known binary format (WKBF).
@@ -157,75 +157,8 @@ To perform a server-side calculation of distance between locations, we can defin
 
 The lat/lon that we get from the browser is actually really, really rough. Mine only gets a location 350km from here... As a result, we set a very wide limit on how "wide" the range can be (500km):
 
-```
-create or replace function get_nearby_jobs(
-    user_lon double precision,
-    user_lat double precision,
-    max_distance double precision
-)
-returns table (
-    distance_m double precision,
-    -- include all job columns automatically
-    job_id uuid,
-    employer_id uuid,
-    title text,
-    description text,
-    location uuid,
-    compensation numeric,
-    payment_method text,
-    approx_duration text,
-    due_by timestamp with time zone,
-    work_within tstzrange,
-    tools text,
-    claimed_by uuid,
-    completed_by_worker boolean,
-    completed_by_employer boolean,
-    created_at timestamp with time zone,
-    claimed_at timestamp with time zone
-)
-language sql as $$
-  select
-    ST_Distance(
-      el.geo,
-      ST_SetSRID(ST_MakePoint(user_lon, user_lat), 4326)::geography
-    ) as distance_m,
-    j.id as job_id,
-    j.employer_id,
-    j.title,
-    j.description,
-    j.location,
-    j.compensation,
-    j.payment_method,
-    j.approx_duration,
-    j.due_by,
-    j.work_within,
-    j.tools,
-    j.claimed_by,
-    j.completed_by_worker,
-    j.completed_by_employer,
-    j.created_at,
-    j.claimed_at
-  from jobs j
-  join employer_locations el
-    on j.location = el.id
-  where ST_DWithin(
-      el.geo,
-      ST_SetSRID(ST_MakePoint(user_lon, user_lat), 4326)::geography,
-      LEAST(max_distance, 500000)
-  )
-  order by distance_m;
-$$;
-```
-
-I didn't want to do this kind of thing, since I like to allow people to freely use VPNs. However this is one of those apps that connects cyberspace to meetspace, so we need to depend on an accurate location...
-
-
-
-
-
-fuck, let's try this instead (forgot the job lat/lon in the results!)
-
 ```postgresql
+-- DROP FUNCTION get_nearby_jobs(double precision,double precision,double precision);
 create or replace function get_nearby_jobs(
     user_lon double precision,
     user_lat double precision,
@@ -238,20 +171,25 @@ returns table (
     -- include all job columns automatically
     job_id uuid,
     employer_id uuid,
+    created_at timestamptz,
     title text,
     description text,
     location uuid,
-    compensation numeric,
+    compensation_amount numeric,
+    compensation_unit text,
     payment_method text,
     approx_duration text,
-    due_by timestamp with time zone,
+    due_by timestamptz,
     work_within tstzrange,
     tools text,
     claimed_by uuid,
-    completed_by_worker boolean,
-    completed_by_employer boolean,
-    created_at timestamp with time zone,
-    claimed_at timestamp with time zone
+    claimed_at timestamptz,
+    completed_by uuid,
+    completed_at timestamptz,
+    confirmed_by uuid,
+    confirmed_at timestamptz,
+    rating_by_employer uuid,
+    rating_by_worker uuid
 )
 language sql as $$
   select
@@ -263,22 +201,27 @@ language sql as $$
     ST_Y(el.geo::geometry) AS lat,
     j.id as job_id,
     j.employer_id,
+    j.created_at,
     j.title,
     j.description,
     j.location,
-    j.compensation,
+    j.compensation_amount,
+    j.compensation_unit,
     j.payment_method,
     j.approx_duration,
     j.due_by,
     j.work_within,
     j.tools,
     j.claimed_by,
-    j.completed_by_worker,
-    j.completed_by_employer,
-    j.created_at,
-    j.claimed_at
+    j.claimed_at,
+    j.completed_by,
+    j.completed_at,
+    j.confirmed_by,
+    j.confirmed_at,
+    j.rating_by_employer,
+    j.rating_by_worker
   from jobs j
-  join employer_locations el
+  join locations el
     on j.location = el.id
   where ST_DWithin(
       el.geo,
@@ -287,7 +230,6 @@ language sql as $$
   )
   order by distance_m;
 $$;
-
 ```
 
 

@@ -67,20 +67,6 @@ export function AuthProvider({ children }) {
                 setAuthLoading(false);
                 return;
             }
-            /*
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', sessionUser.id)
-                .single();
-
-            if (error) console.error(error);
-            else if (!profile) {
-                await supabase
-                    .from('profiles')
-                    .insert([{ id: sessionUser.id, username: sessionUser.email.split('@')[0] }]);
-            }
-            */
             const prof = await lookupProfile(sessionUser.id);
             setUser({ ...sessionUser, role: prof?.role });
             setAuthLoading(false);
@@ -89,8 +75,6 @@ export function AuthProvider({ children }) {
         init();
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-            //setUser(session?.user || null);
-            
             if (session?.user) {
                 setUser(session?.user || null);
                 (async () => {
