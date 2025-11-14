@@ -89,6 +89,14 @@ a:hover {
 
 
 /* 
+--------- PROFILE PAGE  ------------
+*/
+button.role-choice {
+    min-width: 10rem;
+}
+
+
+/* 
 --------- MAP STUFF  ------------
 */
 .map-icon-container {

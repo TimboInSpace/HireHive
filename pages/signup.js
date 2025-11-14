@@ -70,7 +70,7 @@ export default function Signup() {
                             required
                         />
                     </div>
-                    <button type="submit" className="btn btn-secondary text-dark w-100" disabled={loading}>
+                    <button type="submit" className="btn btn-secondary text-dark border-dark w-100" disabled={loading}>
                         {loading ? 'Signing Up…' : 'Sign Up'}
                     </button>
                 </form>

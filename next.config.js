@@ -8,6 +8,11 @@ const nextConfig = {
         hostname: "cdn.jsdelivr.net",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "ugvmkzxnqglneuejcskm.supabase.co",
+        pathname: "/storage/v1/object/public/pictures/**",
+      },
     ],
   },
   turbopack: {

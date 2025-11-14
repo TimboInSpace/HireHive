@@ -1,121 +1,89 @@
 import { useState } from 'react';
+import LocationInput from './LocationInput';
 import { supabase } from '../lib/supabaseClient';
 
-export default function EmployerLocationsTable({ locations, setLocations, userId, handleLocationBlur }) {
-    const [newAddress, setNewAddress] = useState('');
-    const [valid, setValid] = useState(null);
-    const [coords, setCoords] = useState(null);
+export default function EmployerLocationsTable({ locations, setLocations, userId }) {
+    const [pendingAddress, setPendingAddress] = useState('');
+    const [pendingCoords, setPendingCoords] = useState(null); // {lat, lon, display_name}
     const [adding, setAdding] = useState(false);
 
     const addLocation = async () => {
-        if (!coords) {
-            alert('Please enter a valid address.');
-            return;
-        }
+        if (!pendingCoords) return;
         setAdding(true);
+        const wkt = `POINT(${pendingCoords.lon} ${pendingCoords.lat})`;
         try {
             const { data, error } = await supabase
-                .from('employer_locations')
-                .insert([
-                    {
-                        owner: userId,
-                        address: coords.display_name || newAddress,
-                        geo: `POINT(${coords.lon} ${coords.lat})`,
-                    },
-                ])
-                .select('*')
-                .single();
-
-            if (error) throw error;
-            setLocations([...locations, data]);
-            setNewAddress('');
-            setCoords(null);
-            setValid(null);
-        } catch (err) {
-            console.error('Add location error:', err);
-            alert(err.message);
+                .from('locations')
+                .insert({
+                    owner: userId,
+                    address: pendingCoords.display_name,
+                    //address: pendingAddress,
+                    geo: wkt
+                })
+                .select();
+            if (!error && data?.length) {
+                setLocations([...locations, data[0]]);
+                setPendingAddress('');
+                setPendingCoords(null);
+            }
         } finally {
             setAdding(false);
         }
     };
 
     const deleteLocation = async (id) => {
-        if (!confirm('Delete this location?')) return;
-        try {
-            const { error } = await supabase
-                .from('employer_locations')
-                .delete()
-                .eq('id', id);
-            if (error) throw error;
-            setLocations(locations.filter((loc) => loc.id !== id));
-        } catch (err) {
-            console.error('Delete location error:', err);
-            alert(err.message);
+        const { error } = await supabase
+            .from('employer_locations')
+            .delete()
+            .eq('id', id);
+        if (!error) {
+            setLocations(locations.filter(l => l.id !== id));
         }
     };
 
     return (
-        <div className="mt-4">
-            <h5>Employer Locations</h5>
-            <table className="table table-bordered">
+        <div>
+            <table className="table table-striped">
                 <thead>
                     <tr>
-                        <th>Address</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
+                        <th>Location</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    {locations.map((loc) => (
+                    {locations.map(loc => (
                         <tr key={loc.id}>
                             <td>{loc.address}</td>
-                            <td>{new Date(loc.created_at).toLocaleString()}</td>
-                            <td>
+                            <td className="text-end">
                                 <button
-                                    type="button"
-                                    className="btn btn-sm btn-danger"
+                                    className="btn btn-danger btn-sm"
                                     onClick={() => deleteLocation(loc.id)}
+                                    style={{"font-size":"1.25rem"}}
                                 >
-                                    <i className="bi bi-trash"></i>
+                                    <i className="bi bi-trash" ></i>
                                 </button>
                             </td>
                         </tr>
                     ))}
-                    <tr>
-                        <td>
-                            <input
-                                type="text"
-                                className={`form-control ${
-                                    valid === null
-                                        ? ''
-                                        : valid
-                                        ? 'is-valid'
-                                        : 'is-invalid'
-                                }`}
-                                value={newAddress}
-                                onChange={(e) => {
-                                    setNewAddress(e.target.value);
-                                    setValid(null);
-                                }}
-                                onBlur={() =>
-                                    handleLocationBlur(newAddress, setValid, setCoords)
-                                }
-                                placeholder="Add new address"
-                            />
-                        </td>
-                        <td colSpan="2">
-                            <button
-                                type="button"
-                                className="btn btn-success"
-                                onClick={addLocation}
-                                disabled={adding}
-                            >
-                                {adding ? 'Adding...' : 'Add Location'}
-                            </button>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
+
+            <div className="mt-3 d-flex flex-row align-items-baseline">
+                <LocationInput
+                    label=""
+                    value={pendingAddress}
+                    onChange={setPendingAddress}
+                    onValidLocation={setPendingCoords}
+                />
+                <button
+                    style={{width:"150px"}}
+                    className="btn btn-success mt-2 ml-3 flex-shrink-0"
+                    disabled={adding || !pendingCoords}
+                    onClick={addLocation}
+                >
+                    {adding ? 'Adding…' : 'Add Location'}
+                </button>
+            </div>
         </div>
     );
 }

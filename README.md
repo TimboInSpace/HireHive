@@ -40,29 +40,27 @@ Immediately after configuring the DB, go **enable** **the** **`postgis`** extens
 Run this through the SQL Editor after:
 
 ```postgresql
--- We need to avoid a relationship loop. We can avoid setting a FK 
--- relationship to the `employer_locations` for now, then add it back later.
 CREATE TABLE IF NOT EXISTS profiles (
     id uuid references auth.users on delete cascade primary key,
     username text unique,
     role text, -- 'worker', 'employer', or null
     tools text,
     specialties text,
-    primary_location uuid, -- temporarily avoid FK constraint
-    default_rate numeric,
-    building_type text,
+    default_rate numeric, -- default hourly rate, as worker or employer
+    avatar_url text, -- permalink of supabase storage object for their profile pic
+    external_link text, -- optional, a url to post on their page. Could be social or whatever, idc :(
+    profile_data jsonb, -- a catch-all for other profile stuff
     created_at timestamptz default now()
 );
 
--- Now do the rest of the schema
 CREATE TABLE IF NOT EXISTS locations (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  owner uuid,
+  id uuid primary key default gen_random_uuid(),
+  owner uuid references profiles(id) on delete cascade,
+  is_favourite bool,
   address text,
-  geo USER-DEFINED,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT locations_pkey PRIMARY KEY (id),
-  CONSTRAINT locations_owner_fkey FOREIGN KEY (owner) REFERENCES public.profiles(id)
+  building_type text,
+  geo geometry(Point, 4326),
+  created_at timestamp with time zone DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
@@ -71,7 +69,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   created_at timestamptz default now(),
   title text not null,
   description text,
-  location uuid references employer_locations(id), -- FK to employer_locations
+  location uuid references locations(id) on delete cascade,
   compensation_amount numeric,
   compensation_unit text,
   payment_method text,
@@ -85,11 +83,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   completed_at timestamptz,
   confirmed_by uuid references profiles(id),
   confirmed_at timestamptz,
-  rating_by_employer uuid references ratings(id),
-  rating_by_worker uuid references ratings(id),
-  CONSTRAINT jobs_pkey PRIMARY KEY (id),
-  CONSTRAINT jobs_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.profiles(id),
-  CONSTRAINT jobs_location_fkey FOREIGN KEY (location) REFERENCES public.locations(id)
+  rating_by_employer uuid, -- Avoid circular FK relationship for now, then add it back later.
+  rating_by_worker uuid -- Avoid circular FK relationship for now, then add it back later.
 );
 
 CREATE TABLE IF NOT EXISTS tags (
@@ -117,10 +112,10 @@ VALUES
 
 CREATE TABLE IF NOT EXISTS ratings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  submitted_by uuid NOT NULL,
-  job_id uuid REFERENCES public.jobs(id),
-  worker_id uuid REFERENCES public.profiles(id),
-  employer_id uuid REFERENCES public.profiles(id),
+  submitted_by uuid REFERENCES profiles(id),
+  job_id uuid REFERENCES jobs(id) on delete cascade,
+  worker_id uuid REFERENCES profiles(id),
+  employer_id uuid REFERENCES profiles(id),
   rating integer CHECK (rating >= 1 AND rating <= 10),
   created_at timestamptz DEFAULT now()
 );
@@ -141,10 +136,14 @@ CREATE TABLE IF NOT EXISTS public.spatial_ref_sys (
   CONSTRAINT spatial_ref_sys_pkey PRIMARY KEY (srid)
 );
 
--- Lastly, add the FK constraint back in
-alter table profiles
-add constraint fk_primary_location
-foreign key (primary_location) references locations(id);
+-- Lastly, add the circular FK constraints back in
+alter table jobs
+add constraint fk_job_employer_rating
+foreign key (rating_by_employer) references ratings(id);
+
+alter table jobs
+add constraint fk_job_worker_rating
+foreign key (rating_by_worker) references ratings(id);
 ```
 
 To perform a server-side calculation of distance between locations, we can define a **custom function** in supabase. We're expecting the user's location as lat/long (that's how we get it from the browser location services) and need to compare to locations stored in well known binary format (WKBF).
@@ -158,7 +157,7 @@ To perform a server-side calculation of distance between locations, we can defin
 The lat/lon that we get from the browser is actually really, really rough. Mine only gets a location 350km from here... As a result, we set a very wide limit on how "wide" the range can be (500km):
 
 ```postgresql
--- DROP FUNCTION get_nearby_jobs(double precision,double precision,double precision);
+DROP FUNCTION get_nearby_jobs(double precision,double precision,double precision);
 create or replace function get_nearby_jobs(
     user_lon double precision,
     user_lat double precision,
@@ -234,7 +233,31 @@ $$;
 
 
 
+We also need a place to store users' profile pictures. We will also use Supabase for this, but not as a *blob*: we will use the **Storage bucket** feature of Supabase, then just name the files according to user ids.
 
+In Supabase, go to *Storage* then click the *New Bucket* button: Make sure to set it as **Public**, which i havent done in the image below. This allows public reads but still requires auth for writes... 
+
+> Basically, this is what we need to do if we'd like to use Supabase instead of a filesystem for avatars.
+
+![supabase storage bucket configuration](images/supabase storage bucket configuration.png)
+
+Now pop into the SQL editor, and submit these policies:
+
+```postgresql
+-- Only authenticated user can read objects
+CREATE POLICY "Allow authenticated users to read any avatar"
+ON storage.objects
+FOR SELECT
+USING (auth.role() = 'authenticated');
+
+-- Only the owner can delete or update their own object
+CREATE POLICY "Owner can modify their own avatar"
+ON storage.objects
+FOR ALL
+USING (auth.uid() = owner);
+```
+
+This implements row-level security on ***all storage objects***. If we need to store other things later, this should be revised.
 
 
 

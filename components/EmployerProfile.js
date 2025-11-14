@@ -3,11 +3,9 @@ import { supabase } from '../lib/supabaseClient';
 import { getProfile } from '../lib/utils';
 import EmployerLocationsTable from './EmployerLocationsTable';
 
-export default function EmployerProfile({ user, authLoading }) {
-    const [profile, setProfile] = useState(null);
+export default function EmployerProfile({ user, authLoading, profile, locations, setLocations }) {
     const [defaultRate, setDefaultRate] = useState('');
     const [buildingType, setBuildingType] = useState('');
-    const [locations, setLocations] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const handleLocationBlur = async (address, setValid, setCoords) => {
@@ -32,6 +30,7 @@ export default function EmployerProfile({ user, authLoading }) {
         }
     };
 
+    /*
     useEffect(() => {
         if (!user || authLoading) return;
         (async () => {
@@ -56,6 +55,7 @@ export default function EmployerProfile({ user, authLoading }) {
             }
         })();
     }, [user, authLoading]);
+    */
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -77,7 +77,7 @@ export default function EmployerProfile({ user, authLoading }) {
     if (loading) return <p>Loading...</p>;
 
     return (
-        <div className="container mt-5">
+        <div className="container mt-5" style={{ maxWidth: '600px' }}>
             <h2 className="mb-4">Employer Profile</h2>
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">

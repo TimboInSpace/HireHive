@@ -27,6 +27,8 @@ export default function LocationInput({ label = 'Location', value, onChange, onV
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trimmed)}`
             );
             const data = await resp.json();
+            
+            console.log('Looked up location data: ' + JSON.stringify(data, null, '  '));
 
             if (data.length > 0) {
                 const { lat, lon, display_name } = data[0];
@@ -35,7 +37,7 @@ export default function LocationInput({ label = 'Location', value, onChange, onV
                 onValidLocation({ lat, lon, display_name });
             } else {
                 setValid(false);
-                setLabel("");
+                setFoundAddress("");
                 onValidLocation(null);
             }
         } catch (err) {
@@ -56,8 +58,12 @@ export default function LocationInput({ label = 'Location', value, onChange, onV
     };
 
     return (
-        <div className="mb-3">
-            <label className="form-label">{label}</label>
+        <div className="mb-3 location-input flex-grow-1" style={{display: "inline-block"}}>
+            {label === "" ? (
+                <span></span>
+            ) : ( 
+                <label className="form-label">{label}</label>
+            )}
             <div className="input-group">
                 <input
                     type="text"
@@ -91,13 +97,14 @@ export default function LocationInput({ label = 'Location', value, onChange, onV
                         <i class="bi bi-search"></i>
                     )}
                 </button>
+                <p className="text-info">{foundAddress}</p>
             </div>
             {valid === false && dirty && (
                 <div className="invalid-feedback d-block">
                     Could not find that location.
                 </div>
             )}
-            <p className="text-info">{foundAddress}</p>
+            
         </div>
     );
 }
