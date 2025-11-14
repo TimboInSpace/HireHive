@@ -4,9 +4,7 @@ import { getProfile } from '../lib/utils';
 import EmployerLocationsTable from './EmployerLocationsTable';
 
 export default function EmployerProfile({ user, authLoading, profile, locations, setLocations }) {
-    const [defaultRate, setDefaultRate] = useState('');
-    const [buildingType, setBuildingType] = useState('');
-    const [loading, setLoading] = useState(true);
+    
 
     const handleLocationBlur = async (address, setValid, setCoords) => {
         if (!address.trim()) return;
@@ -30,41 +28,12 @@ export default function EmployerProfile({ user, authLoading, profile, locations,
         }
     };
 
-    /*
-    useEffect(() => {
-        if (!user || authLoading) return;
-        (async () => {
-            try {
-                const prof = await getProfile(user.id, user);
-                setProfile(prof);
-                
-                setDefaultRate(prof?.default_rate || '');
-                setBuildingType(prof?.building_type || '');
-
-                // New locations table
-                const { data: locs, error } = await supabase
-                    .from('locations')
-                    .select('*')
-                    .eq('owner', user.id);
-                if (error) throw error;
-                setLocations(locs || []);
-            } catch (err) {
-                console.error('Error loading employer data:', err);
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [user, authLoading]);
-    */
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             await supabase
                 .from('profiles')
                 .update({
-                    default_rate: parseFloat(defaultRate),
-                    building_type: buildingType,
                 })
                 .eq('id', user.id);
             alert('Profile updated!');
@@ -74,38 +43,12 @@ export default function EmployerProfile({ user, authLoading, profile, locations,
         }
     };
 
-    if (loading) return <p>Loading...</p>;
+    if (authLoading) return <p>Loading...</p>;
 
     return (
-        <div className="container mt-5" style={{ maxWidth: '600px' }}>
-            <h2 className="mb-4">Employer Profile</h2>
+        <div className="border border-dark rounded p-3">
+            <h2 className="mb-4">Employer Details</h2>
             <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                    <label className="form-label">Default Rate ($/h)</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        className="form-control"
-                        value={defaultRate}
-                        onChange={(e) => setDefaultRate(e.target.value)}
-                        required
-                    />
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Building Type</label>
-                    <select
-                        className="form-select"
-                        value={buildingType}
-                        onChange={(e) => setBuildingType(e.target.value)}
-                        required
-                    >
-                        <option value="House">House</option>
-                        <option value="Condo">Condo</option>
-                        <option value="Business">Business</option>
-                    </select>
-                </div>
 
                 <EmployerLocationsTable
                     locations={locations}
@@ -114,8 +57,8 @@ export default function EmployerProfile({ user, authLoading, profile, locations,
                     handleLocationBlur={handleLocationBlur}
                 />
 
-                <button type="submit" className="btn btn-secondary text-dark mt-3">
-                    Save Profile
+                <button type="submit" className="btn btn-secondary text-dark border-dark mt-3">
+                    Save Employer Details
                 </button>
             </form>
         </div>

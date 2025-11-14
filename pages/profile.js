@@ -14,6 +14,8 @@ export default function Profile() {
     const [ready, setReady] = useState(false);
     const [role, setRoleState] = useState(user?.role ?? null);
     
+    const [defaultRate, setDefaultRate] = useState('');
+    
     useEffect(() => {
         setRoleState(user?.role ?? null);
     }, [user]);
@@ -88,30 +90,54 @@ export default function Profile() {
     // No role yet → role selection UI
     return (
         <ProtectedRoute allowedRoles={['employer','worker','both','authenticated']}>
-            <div className="container py-5 text-center">
-                <h2>Select Your Role</h2>
-                <p>Choose Worker if you want to do jobs, or Employer if you want to post jobs.</p>
-                <div className="d-flex justify-content-center gap-4 mt-4">
-                    <button
-                        className="role-choice btn btn-primary btn-lg d-flex flex-column align-items-center"
-                        onClick={() => setRole('worker')}
-                    >
-                        <i className="bi bi-person-workspace" style={{ fontSize: '2rem' }}></i>
-                        Worker
-                    </button>
-                    <button
-                        className="role-choice btn btn-secondary text-dark border-dark btn-lg d-flex flex-column align-items-center"
-                        onClick={() => setRole('employer')}
-                    >
-                        <i className="bi bi-building" style={{ fontSize: '2rem' }}></i>
-                        Employer
-                    </button>
-                </div>
+            <div className="container text-center" style={{ maxWidth: '800px' }}>
+            
+                <section className="profile-section profile-section-general py-3">
+                    <h2>Profile</h2>
+                    <AvatarUploader user={user} profile={profile} onChange={ (url) => setProfile({...profile, avatar_url: url}) } />
+                    <div className="row mb-3 justify-content-center align-items-center">
+                        <label htmlFor="defaultRate" className="col-auto col-form-label">
+                            Default Rate ($/h)
+                        </label>
+                        <div className="col-auto">
+                            <input
+                                type="number"
+                                step="0.50"
+                                min="3.0"
+                                className="form-control"
+                                id="defaultRate"
+                                value={defaultRate}
+                                onChange={(e) => setDefaultRate(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+                </section>
+                
+                <section className="profile-section profile-section-rolechoice text-center py-3">
+                    <h4>Select Your Role</h4>
+                    <p>Choose Worker if you want to do jobs, or Employer if you want to post jobs.</p>
+                    <div className="d-flex justify-content-center gap-4 mt-4">
+                        <button
+                            className="role-choice btn btn-primary btn-lg d-flex flex-column align-items-center"
+                            onClick={() => setRole('worker')}
+                        >
+                            <i className="bi bi-person-workspace" style={{ fontSize: '2rem' }}></i>
+                            Worker
+                        </button>
+                        <button
+                            className="role-choice btn btn-secondary text-dark border-dark btn-lg d-flex flex-column align-items-center"
+                            onClick={() => setRole('employer')}
+                        >
+                            <i className="bi bi-building" style={{ fontSize: '2rem' }}></i>
+                            Employer
+                        </button>
+                    </div>
+                </section>
+                
+                { roleSpecific ? <section className="profile-section profile-section-rolespecific py-3">{roleSpecific}</section> : "" }
+                
             </div>
-            <section className="profile-section-general">
-                <AvatarUploader user={user} profile={profile} onChange={ (url) => setProfile({...profile, avatar_url: url}) } />
-            </section>
-            { roleSpecific }
         </ProtectedRoute>
     );
 

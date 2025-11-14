@@ -95,6 +95,11 @@ button.role-choice {
     min-width: 10rem;
 }
 
+.avatar-overlay {
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    font-size: 0.75rem;
+}
 
 /* 
 --------- MAP STUFF  ------------

@@ -43,6 +43,7 @@ export default function EmployerLocationsTable({ locations, setLocations, userId
 
     return (
         <div>
+            
             <table className="table table-striped">
                 <thead>
                     <tr>
@@ -65,6 +66,7 @@ export default function EmployerLocationsTable({ locations, setLocations, userId
                             </td>
                         </tr>
                     ))}
+                    {locations.length === 0 ? <tr key="0"><td>No locations added yet.</td><td></td></tr> : ""}
                 </tbody>
             </table>
 
