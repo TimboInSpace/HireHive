@@ -10,7 +10,6 @@ export default function EmployerProfile({ user, authLoading }) {
     const [locations, setLocations] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Like an "onUnfocus" event handler, for the `location` field.
     const handleLocationBlur = async (address, setValid, setCoords) => {
         if (!address.trim()) return;
         try {
@@ -37,13 +36,15 @@ export default function EmployerProfile({ user, authLoading }) {
         if (!user || authLoading) return;
         (async () => {
             try {
-                const prof = await getProfile(user.id);
+                const prof = await getProfile(user.id, user);
                 setProfile(prof);
-                setDefaultRate(prof.default_rate || '');
-                setBuildingType(prof.building_type || '');
+                
+                setDefaultRate(prof?.default_rate || '');
+                setBuildingType(prof?.building_type || '');
 
+                // New locations table
                 const { data: locs, error } = await supabase
-                    .from('employer_locations')
+                    .from('locations')
                     .select('*')
                     .eq('owner', user.id);
                 if (error) throw error;

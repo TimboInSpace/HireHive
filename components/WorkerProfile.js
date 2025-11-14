@@ -1,4 +1,3 @@
-// components/WorkerProfile.js
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { getProfile } from '../lib/utils';
@@ -19,13 +18,14 @@ export default function WorkerProfile({ user, authLoading }) {
         if (!user || authLoading) return;
         (async () => {
             try {
-                const prof = await getProfile(user.id);
+                const prof = await getProfile(user.id, user);
                 setProfile(prof || null);
                 setTools(prof?.tools || '');
                 setSpecialties(prof?.specialties || '');
 
+                // Get worker's location (based on new schema)
                 const { data: loc, error } = await supabase
-                    .from('employer_locations')
+                    .from('locations')
                     .select('*')
                     .eq('owner', user.id)
                     .maybeSingle();
@@ -34,13 +34,13 @@ export default function WorkerProfile({ user, authLoading }) {
 
                 if (loc) {
                     setLocation(loc.address);
-                    setCoords({
-                        lat: loc.lat,
-                        lon: loc.lon,
-                        display_name: loc.address,
-                    });
+                    // PostGIS stores `geo` as a geometry — extract lat/lon
+                    if (loc.geo?.coordinates) {
+                        const [lon, lat] = loc.geo.coordinates;
+                        setCoords({ lat, lon, display_name: loc.address });
+                    }
                     setValid(true);
-                    setLastUpdate(new Date(loc.updated_at));
+                    setLastUpdate(new Date(loc.created_at));
                 }
             } catch (err) {
                 console.error('Error loading worker data:', err);
@@ -54,7 +54,11 @@ export default function WorkerProfile({ user, authLoading }) {
         e.preventDefault();
         setSaving(true);
         try {
-            await supabase.from('profiles').update({ tools, specialties }).eq('id', user.id);
+            // Update profile fields
+            await supabase
+                .from('profiles')
+                .update({ tools, specialties })
+                .eq('id', user.id);
 
             if (coords && valid) {
                 const now = new Date();
@@ -68,20 +72,32 @@ export default function WorkerProfile({ user, authLoading }) {
                     return;
                 }
 
-                await supabase.from('employer_locations').delete().eq('owner', user.id);
+                // Delete old location and insert a new one
+                await supabase.from('locations').delete().eq('owner', user.id);
 
-                const { error: insertErr } = await supabase
-                    .from('employer_locations')
+                const { data: insertedLoc, error: insertErr } = await supabase
+                    .from('locations')
                     .insert([
                         {
                             owner: user.id,
                             address: coords.display_name,
                             geo: `POINT(${coords.lon} ${coords.lat})`,
-                            updated_at: now.toISOString(),
+                            created_at: now.toISOString(),
                         },
-                    ]);
+                    ])
+                    .select()
+                    .single();
 
                 if (insertErr) throw insertErr;
+
+                // Update profile.primary_location FK
+                if (insertedLoc?.id) {
+                    await supabase
+                        .from('profiles')
+                        .update({ primary_location: insertedLoc.id })
+                        .eq('id', user.id);
+                }
+
                 setLastUpdate(now);
             }
 

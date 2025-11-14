@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
     // TO-DO: make sure this gets called on every login? 
     // ?!? Maybe it should go in the supabase.auth.onAuthStateChange handler ?!?
     // 
-    const lookupProfile = async (userId) => {
+    const lookupProfile = async (userId, username) => {
             let userProfile;
             // Attempt to look up the profile
             const { data: profile, error } = await supabase
@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
                 // Insert the profile
                 const { data: insertedProfile, error: insertError} = await supabase
                     .from('profiles')
-                    .insert([{ id: sessionUser.id, username: sessionUser.email.split('@')[0] }])
+                    .insert([{ id: userId, username: username }])
                     .select('*');
                     
                 if (insertError) { 
@@ -67,8 +67,8 @@ export function AuthProvider({ children }) {
                 setAuthLoading(false);
                 return;
             }
-            const prof = await lookupProfile(sessionUser.id);
-            setUser({ ...sessionUser, role: prof?.role });
+            const prof = await lookupProfile(sessionUser.id, sessionUser.username);
+            setUser({ ...sessionUser, role: prof?.role || 'authenticated' });
             setAuthLoading(false);
         };
 
@@ -76,10 +76,10 @@ export function AuthProvider({ children }) {
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
-                setUser(session?.user || null);
+                //setUser(session?.user || null);
                 (async () => {
-                    const prof = await lookupProfile(session.user.id);
-                    setUser({ ...session.user, role: prof?.role || null });
+                    const prof = await lookupProfile(session.user.id, session.user.username);
+                    setUser({ ...session.user, role: prof?.role || 'authenticated' });
                 })();
             } else {
                 setUser(null);
@@ -125,9 +125,8 @@ export function AuthProvider({ children }) {
                     .eq('id', user.id)
                     .single();
                 if (error) console.error(error);
-                if (user?.role !== profile?.role) {
-                    //alert('overwriting role: ' + user?.role + ' with ' + profile?.role);    
-                    setUser({ ...user, role: profile?.role });
+                if (user?.role !== profile?.role) { 
+                    setUser({ ...user, role: profile?.role || 'authenticated'});
                 }
             }
             

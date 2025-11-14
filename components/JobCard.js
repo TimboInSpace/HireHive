@@ -31,7 +31,7 @@ export default function JobCard({ job, employer_id, isLoading }) {
             }
 
             try {
-                const profile = await getProfile(employer_id);
+                const profile = await getProfile(employer_id, {});
                 const ratings = await getEmployerRatings(employer_id);
 
                 const rated = ratings.filter(r => r.job_rating != null);
